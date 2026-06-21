@@ -20,7 +20,16 @@ bool BME690Component::check_bsec_status_(const char *label, bsec_library_return_
     return true;
   }
 
-  ESP_LOGW(TAG, "%s failed: %d", label, static_cast<int>(rslt));
+  // BSEC return codes are signed: negative values are errors, positive values are warnings
+  // (e.g. BSEC_W_SU_UNKNOWNOUTPUTGATE). A warning means the call still succeeded, so log it
+  // and continue. Treating warnings as fatal here tears down the whole BSEC subscription and
+  // permanently drops the device to raw-only output.
+  if (rslt > BSEC_OK) {
+    ESP_LOGW(TAG, "%s warning: %d", label, static_cast<int>(rslt));
+    return true;
+  }
+
+  ESP_LOGE(TAG, "%s failed: %d", label, static_cast<int>(rslt));
   return false;
 }
 

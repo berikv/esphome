@@ -21,11 +21,20 @@ DOMAIN = "bme690"
 CONF_BME690_ID = "bme690_id"
 CONF_BSEC_LIBRARY = "bsec_library"
 CONF_STATE_SAVE_INTERVAL = "state_save_interval"
+CONF_SAMPLE_RATE = "sample_rate"
 
 bme690_ns = cg.esphome_ns.namespace("bme690")
 BME690Component = bme690_ns.class_(
     "BME690Component", cg.PollingComponent, i2c.I2CDevice
 )
+
+# BSEC virtual-sensor output rate. ULP = 0.0033 Hz (one set of outputs every ~300 s,
+# lowest power, Bosch's default for IAQ); LP = 0.33 Hz (every ~3 s, faster response and
+# faster IAQ calibration at higher power). The IAQ subscription accepts these two rates.
+BSEC_SAMPLE_RATES = {
+    "ulp": cg.RawExpression("BSEC_SAMPLE_RATE_ULP"),
+    "lp": cg.RawExpression("BSEC_SAMPLE_RATE_LP"),
+}
 
 
 def _compute_local_file_path(url: str) -> Path:
@@ -60,6 +69,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_STATE_SAVE_INTERVAL, default="6hours"
             ): cv.positive_time_period_minutes,
+            cv.Optional(CONF_SAMPLE_RATE, default="ulp"): cv.one_of(
+                *BSEC_SAMPLE_RATES, lower=True
+            ),
         }
     )
     .extend(cv.polling_component_schema("5s"))
@@ -96,3 +108,4 @@ async def to_code(config):
     cg.add(
         var.set_state_save_interval(config[CONF_STATE_SAVE_INTERVAL].total_milliseconds)
     )
+    cg.add(var.set_sample_rate(BSEC_SAMPLE_RATES[config[CONF_SAMPLE_RATE]]))

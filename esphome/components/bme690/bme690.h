@@ -49,6 +49,7 @@ class BME690Component : public PollingComponent, public i2c::I2CDevice {
   void set_comp_humidity_sensor(sensor::Sensor *sensor) { comp_humidity_sensor = sensor; }
   void set_state_save_interval(uint32_t interval) { state_save_interval_ms_ = interval; }
   void set_state_preference_hash(uint32_t hash) { this->state_preference_hash_ = hash; }
+  void set_sample_rate(float sample_rate) { this->sample_rate_ = sample_rate; }
 #ifdef USE_TEXT_SENSOR
   void set_iaq_accuracy_text_sensor(text_sensor::TextSensor *sensor) { iaq_accuracy_text_sensor_ = sensor; }
 #endif
